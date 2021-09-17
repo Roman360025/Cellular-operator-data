@@ -1,6 +1,6 @@
 import csv
 import pandas as pd
-import matplotlib.pyplot as plt
+
 
 class HOperator:
 
@@ -9,10 +9,6 @@ class HOperator:
         self.name_of_directory = 'Assignment with a cellular operator/'
         self.new_directory = 'New log files/'
         self.result_directory = 'Result/'
-
-    def mapper(self, log_file):
-        log_file = self.new_directory + log_file
-        df = pd.read_csv(log_file)
 
     def chunkIt(self, seq, num):
         avg = len(seq) / float(num)
@@ -27,32 +23,8 @@ class HOperator:
 
     def reducer(self, log_file):
         df = pd.read_csv(log_file)
-        # df.pivot_table(values='Speed', index='Day', aggfunc='median').plot(kind='line')
         df = df.pivot_table(values='Speed', index='Day', aggfunc='median')
         return df
-
-
-    def chunks_mapper(self, chunk):
-        # mapped_chunk = map(self.mapper, chunk)
-        name_of_h = chunk[0].split('.')[1]
-        general_df = pd.read_csv(self.new_directory + chunk.pop())
-
-        for i in chunk:
-            df = pd.read_csv(self.new_directory + i)
-            # general_df = pd.merge(general_df, df, on = ['Day', 'Time'], how='outer')
-            general_df = pd.concat([df, general_df], axis=0)
-
-        general_df = general_df.groupby(['Day', 'Time']).sum()
-        new_name_of_file = 'Result/' + name_of_h + '.csv'
-        general_df.to_csv(new_name_of_file)
-        return self.reducer(new_name_of_file)
-
-    def reducer_of_chunk(self, some_h):
-        pass
-        # sum_of_average_speed = 0
-        # for i in some_h:
-        #     sum_of_average_speed += i[0]
-        # return sum_of_average_speed / len(some_h)
 
     def process_files(self, log_file):
         old_log_file = self.name_of_directory + log_file
@@ -91,3 +63,21 @@ class HOperator:
 
     def chunk_process(self, chunk):
         list(map(self.process_files, chunk))
+
+    def chunks_mapper(self, chunk):
+        name_of_h = chunk[0].split('.')[1]
+        general_df = pd.read_csv(self.new_directory + chunk.pop())
+
+        for i in chunk:
+            df = pd.read_csv(self.new_directory + i)
+            general_df = pd.concat([df, general_df], axis=0)
+
+        general_df = general_df.groupby(['Day', 'Time']).sum()
+        new_name_of_file = 'Result/' + name_of_h + '.csv'
+        general_df.to_csv(new_name_of_file)
+        return self.reducer(new_name_of_file)
+
+    def chunk_max_speed(self, chunk):
+        df = pd.read_csv(self.result_directory + chunk[0])
+        df = df.groupby(["Day"])["Speed"].max()
+        return df

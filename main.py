@@ -26,8 +26,6 @@ if __name__ == "__main__":
 
     result = pool.map(operator.chunks_mapper, data_chunks)
 
-    # ax = result.pop().plot(label='h31')
-
     index = 0
     for i in result:
         plt.plot([day for day in i.to_dict()['Speed']],
@@ -35,5 +33,27 @@ if __name__ == "__main__":
                  label=name_of_h[index])
         index += 1
 
+    # Первая метрика: медиана скоростей по дням
     plt.legend()
     plt.savefig("graph.png")
+
+    plt.clf()
+
+#     Вторая метрика : наивысшие скорости по дням
+    data = sorted(os.listdir(operator.result_directory))
+    data_chunks = operator.chunkIt(data, number_of_chunks)
+
+    result = pool.map(operator.chunk_max_speed, data_chunks)
+
+    print(result)
+
+    index = 0
+    for i in result:
+        plt.plot([day for day in i.to_dict()],
+                 [i.to_dict()[day] for day in i.to_dict()],
+                 label=name_of_h[index])
+        index += 1
+
+    plt.legend()
+    plt.savefig("max_speed.png")
+
