@@ -81,3 +81,21 @@ class HOperator:
         df = pd.read_csv(self.result_directory + chunk[0])
         df = df.groupby(["Day"])["Speed"].max()
         return df
+
+    def chunk_sum_max_speed(self, chunk):
+        key_of_chunk = list(chunk.keys())[0]
+        df = pd.read_csv(self.result_directory + key_of_chunk+'.csv')
+        week = chunk[key_of_chunk]
+        h_sum_speed = chunk
+        for day in range(1, 8):
+            df_i = df.where(df['Day'] == day).where(df['Speed'] > float(week[day]))['Speed'].sum()
+            h_sum_speed[key_of_chunk][day] = df_i
+
+
+        return h_sum_speed
+        # print(chunk)
+
+
+
+
+

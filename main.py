@@ -1,8 +1,6 @@
 import os
 from multiprocessing import Pool
 import map_reduce_operator
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
@@ -27,25 +25,50 @@ if __name__ == "__main__":
     result = pool.map(operator.chunks_mapper, data_chunks)
 
     index = 0
+
+
     for i in result:
         plt.plot([day for day in i.to_dict()['Speed']],
                  [i.to_dict()['Speed'][day] for day in i.to_dict()['Speed']],
                  label=name_of_h[index])
+        i = i.to_dict()
+        i[name_of_h[index]] = i.pop('Speed')
+        result[index] = i
         index += 1
 
+
     # Первая метрика: медиана скоростей по дням
+    plt.xlabel('Дни')
+    plt.ylabel('Медианные скорости')
+    plt.title('Скорости складывались по всем пользователям в одну и ту же минуту')
     plt.legend()
     plt.savefig("graph.png")
 
     plt.clf()
 
-#     Вторая метрика : наивысшие скорости по дням
+    #Вторая метрика: сумма максимальных скоростей по дням
+    result = pool.map(operator.chunk_sum_max_speed, result)
+
+    index = 0
+    for i in result:
+        week = i[name_of_h[index]]
+        plt.plot([day for day in week],
+                 [week[day] for day in week],
+                 label=name_of_h[index])
+        index += 1
+
+    plt.xlabel('Дни')
+    plt.ylabel('Сумма максимальных скоростей')
+    plt.title('Максимальная скорости от станций, сумма')
+    plt.legend()
+    plt.savefig("max_speed_sum.png")
+    plt.clf()
+#     Третья метрика : наивысшие скорости по дням
     data = sorted(os.listdir(operator.result_directory))
     data_chunks = operator.chunkIt(data, number_of_chunks)
 
     result = pool.map(operator.chunk_max_speed, data_chunks)
 
-    print(result)
 
     index = 0
     for i in result:
@@ -54,6 +77,11 @@ if __name__ == "__main__":
                  label=name_of_h[index])
         index += 1
 
+    plt.xlabel('Дни')
+    plt.ylabel('Максимальные скорости')
+    plt.title('Максимальная скорость по дням суммарно от всех пользователей')
     plt.legend()
     plt.savefig("max_speed.png")
+
+
 
