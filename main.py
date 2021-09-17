@@ -1,14 +1,15 @@
 import os
-from multiprocessing import Pool, Manager
-# from map_reduce_operator import chunkIt, reducer, chunks_mapper, name_of_directory
+from multiprocessing import Pool
 import map_reduce_operator
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     number_of_chunks = 4
 
     pool = Pool(number_of_chunks)
-    # manager = Manager()
-    operator = map_reduce_operator.H_operator()
+    operator = map_reduce_operator.HOperator()
     data = sorted(os.listdir(operator.name_of_directory))
 
     data_chunks = operator.chunkIt(data, number_of_chunks)
@@ -18,13 +19,21 @@ if __name__ == "__main__":
     for i in data_chunks:
         name_of_h[data_chunks.index(i)] = i[0].split('.')[1]
 
-    mapped = pool.map(operator.chunks_mapper, data_chunks)
-    # print(list(mapped))
-    print('Список средних скоростей')
+    pool.map(operator.chunk_process, data_chunks)
 
-    for i in list(mapped):
-        print(name_of_h[list(mapped).index(i)], ":", i)
+    data = sorted(os.listdir(operator.new_directory))
+    data_chunks = operator.chunkIt(data, number_of_chunks)
 
-    print()
-    reduce = operator.reducer(list(mapped))
-    print('Наивысшая средняя скорость:', name_of_h[reduce])
+    result = pool.map(operator.chunks_mapper, data_chunks)
+
+    # ax = result.pop().plot(label='h31')
+
+    index = 0
+    for i in result:
+        plt.plot([day for day in i.to_dict()['Speed']],
+                 [i.to_dict()['Speed'][day] for day in i.to_dict()['Speed']],
+                 label=name_of_h[index])
+        index += 1
+
+    plt.legend()
+    plt.savefig("graph.png")
