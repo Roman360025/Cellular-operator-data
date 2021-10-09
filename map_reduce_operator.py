@@ -91,9 +91,7 @@ class HOperator:
             df_i = df.where(df['Day'] == day).where(df['Speed'] > float(week[day]))['Speed'].sum()
             h_sum_speed[key_of_chunk][day] = df_i
 
-
         return h_sum_speed
-        # print(chunk)
 
 
 
